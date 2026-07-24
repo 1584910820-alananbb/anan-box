@@ -1315,47 +1315,52 @@ function buildMulCalc(a,b,partials,product){
   return "\\begin{array}{"+colSpec+"}\n"+lines.join(" \\\\\n")+"\n\\end{array}";
 }
 // 除法
-function buildDivLatex(dividend,divisor){
-  const a=BigInt(dividend),b=BigInt(divisor);
-  if(b===0n)return "\\text{（除数不能为 0）}";
-  const quotient=String(a/b);
-  const remainder=String(a%b);
-  const dStr=String(dividend);
-  const n=dStr.length;
-  // 简单格式：商 / 除数)被除数 / 步骤
-  const maxLen=Math.max(divisor.length,dStr.length,quotient.length);
-  function rAlign(num){
-    const pad=maxLen-num.length;
-    return "\\;".repeat(pad)+num;
-  }
-  const lines=[];
-  lines.push(rAlign(quotient));
-  lines.push(divisor+" \\enclose{longdiv}{"+dStr+"}");
-  // 模拟除法步骤
-  const steps=[];
-  let current="";
+// 除法竖式：模拟手算（千问 max 方案，phantom 对齐 + drawable 过滤）
+function simulateDiv(dividend,divisor){
+  const digits=String(dividend).split("").map(Number);
+  const n=digits.length,qDigits=[],steps=[];
+  let cur=0,started=false;
   for(let i=0;i<n;i++){
-    current+=dStr[i];
-    const cur=BigInt(current);
-    const qDigit=Number(cur/b);
-    const sub=qDigit*b;
-    if(qDigit>0){
-      steps.push({sub:String(sub),rem:String(cur-sub),pos:i});
-    }
-    current=String(cur-sub);
+    cur=cur*10+digits[i];
+    const q=Math.floor(cur/divisor);
+    if(!started&&q===0&&i<n-1)continue; // 跳过商的前导零
+    started=true;
+    qDigits.push(q);
+    steps.push({end:i,q:q,product:q*divisor,partial:cur});
+    cur-=q*divisor;
   }
-  steps.forEach((st,idx)=>{
-    lines.push(rAlign(st.sub));
-    lines.push("\\hline");
-    if(idx<steps.length-1){
-      const nextRem=st.rem==="0"?"":st.rem;
-      if(nextRem)lines.push(rAlign(nextRem));
-    }else{
-      lines.push(rAlign(remainder==="0"?"0":remainder));
+  return {digits,qDigits,steps,rem:cur};
+}
+function buildDivLatex(dividend,divisor){
+  const dNum=Number(dividend),bNum=Number(divisor);
+  if(bNum===0)return "\\text{（除数不能为 0）}";
+  if(dNum<bNum)return "\\text{（被除数应 ≥ 除数）}";
+  const {digits,qDigits,steps,rem}=simulateDiv(dNum,bNum);
+  // drawable：商中间为0的步骤按教材惯例不写减法行（如 906÷3）
+  const drawable=steps.map((s,k)=>s.q>0||k===steps.length-1);
+  // 行尾补 phantom，使该行右端对齐到被除数第 i 位
+  const pad=i=>{const r=digits.slice(i+1).join("");return r?"\\phantom{"+r+"}":"";};
+  const body=[];
+  let prevEnd=-1,prevRem=null;
+  for(let k=0;k<steps.length;k++){
+    const s=steps[k];
+    if(!drawable[k]){prevEnd=s.end;prevRem=s.partial;continue;}
+    // "落下来"一行 = 上步余数拼落下的数字
+    if(prevRem!==null){
+      body.push(prevRem+""+digits.slice(prevEnd+1,s.end+1).join("")+pad(s.end));
     }
-  });
-  if(steps.length===0)lines.push(rAlign("0"));
-  return "\\begin{array}{r}\n"+lines.join(" \\\\\n")+"\n\\end{array}";
+    body.push("\\underline{"+s.product+"}"+pad(s.end));
+    prevEnd=s.end;
+    prevRem=s.partial-s.product;
+  }
+  // 最终余数
+  body.push(String(rem));
+  const rows=[
+    qDigits.join(""),
+    divisor+"\\enclose{longdiv}{"+digits.join("")+"}",
+    ...body
+  ];
+  return "\\begin{array}{r}\n"+rows.join(" \\\\[2pt]\n")+"\n\\end{array}";
 }
 function buildVcalc(op,a,b){return buildVcalcLatex(op,a,b);}
 function vadd(a,b,res,op){const W=Math.max(a.length,b.length,res.length);return [" "+padL(a,W),op+padL(b,W),"-".repeat(W+1)," "+padL(res,W)].join("\n");}
