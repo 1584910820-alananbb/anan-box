@@ -666,6 +666,10 @@ function buildToolbar(){
   chip(r,"↑ 气体","气体符号"," \\uparrow ");chip(r,"↓ 沉淀","沉淀符号"," \\downarrow ");
   chip(r,"⇌ 可逆","可逆箭头","\\rightleftharpoons ");
 
+  // ── 其他
+  r=row("其他","format");
+  chip(r,"📋 规范回复模版","规范回复模版","## 1.解题思路 ##\n> [一句话解题核心技巧/方法/思路]\n### 解题步骤： ###\n1. 第一步XXX\n2. 第二步XXX\n3. 第三步XXX\n4. 第四步XXX\n5. ...\n\n![解析图片(如有需要)](url)\n\n## 2.标准解题过程/标准答案 ##\n> [具体解题过程/答案]\n\n>![解题过程/答案图片(如有需要)](url)\n");
+
   // ── Markdown 排版（图标风格）
   r=row("排版","format");
   const ic=(parent,icon,title,text)=>{const b=el("button","ichip",icon);b.title=title;b.addEventListener("click",()=>onChip(text,b));parent.appendChild(b);};
