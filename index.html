@@ -1244,7 +1244,9 @@ function genVcalc(){
     ctx.body.append(rt,ra,rb);ctx.body.appendChild(el("div","hint","仅支持非负整数；生成 LaTeX array 格式竖式，逐位对齐。"));
     const pv=el("div","preview-box");ctx.body.appendChild(pv);
     function upd(){
-      const latex=buildVcalcLatex(op,ia.value,ib.value);
+      let latex=buildVcalcLatex(op,ia.value,ib.value);
+      // 预处理：KaTeX 不支持 \enclose{longdiv}，转为近似写法
+      latex=latex.replace(/\\enclose\{longdiv\}\{([^}]*)\}/g,'\\overline{\\smash{\\big)}\\,$1}');
       try{pv.innerHTML=katex.renderToString(latex,{displayMode:true,throwOnError:false});}
       catch(e){pv.innerHTML='<span class="math-err">'+esc(e.message)+'</span>';}
     }
@@ -1432,44 +1434,46 @@ $$\\ce{2KClO3 ->[MnO2][$\\Delta$] 2KCl + 3O2 ^}$$
 
 ## 四、竖式（LaTeX 逐位对齐）
 
-**1. 加法 $123 + 45$：**
+1.加法 $123 + 45$：
 
 $$
-\begin{array}{cccc}
-  & 1 & 2 & 3 \\
-+ &   & 4 & 5 \\
-\hline
+\\begin{array}{cccc}
+  & 1 & 2 & 3 \\\\
++ &   & 4 & 5 \\\\
+\\hline
   & 1 & 6 & 8
-\end{array}
+\\end{array}
 $$
 
-**2. 乘法 $123 \times 45$：**
+2.乘法 $123 \\times 45$：
 
 $$
-\begin{array}{cccccc}
-  &   &   & 1 & 2 & 3 \\
-\times &   &   &   & 4 & 5 \\
-\hline
-  &   &   & 6 & 1 & 5 \\
-  &   & 4 & 9 & 2 &   \\
-\hline
+\\begin{array}{cccccc}
+  &   &   & 1 & 2 & 3 \\\\
+\\times &   &   &   & 4 & 5 \\\\
+\\hline
+  &   &   & 6 & 1 & 5 \\\\
+  &   & 4 & 9 & 2 &   \\\\
+\\hline
   &   & 5 & 5 & 3 & 5
-\end{array}
+\\end{array}
 $$
 
-**3. 除法 $10086 \div 45$：**
+**3.除法 $12345 \\div 5$：**
 
 $$
-\begin{array}{r}
-224 \\[2pt]
-45\enclose{longdiv}{10086} \\[2pt]
-\underline{90}\phantom{86} \\[2pt]
-108\phantom{6} \\[2pt]
-\underline{90}\phantom{6} \\[2pt]
-186 \\[2pt]
-\underline{180} \\[2pt]
-6
-\end{array}
+\\begin{array}{r}
+2469 \\\\[2pt]
+5\\enclose{longdiv}{12345} \\\\[2pt]
+\\underline{10}\\phantom{345} \\\\[2pt]
+23\\phantom{45} \\\\[2pt]
+\\underline{20}\\phantom{45} \\\\[2pt]
+34\\phantom{5} \\\\[2pt]
+\\underline{30}\\phantom{5} \\\\[2pt]
+45 \\\\[2pt]
+\\underline{45} \\\\[2pt]
+0
+\\end{array}
 $$
 
 > 每位数字独立一列，个十百千位严格对齐。用工具栏「▥ 竖式」一键生成。
