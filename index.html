@@ -414,7 +414,22 @@ function checkKatexCss(){
 
 /* 3. 数据 */
 const GREEK="α \\alpha,β \\beta,γ \\gamma,δ \\delta,ε \\varepsilon,ζ \\zeta,η \\eta,θ \\theta,ι \\iota,κ \\kappa,λ \\lambda,μ \\mu,ν \\nu,ξ \\xi,π \\pi,ρ \\rho,σ \\sigma,τ \\tau,φ \\varphi,χ \\chi,ψ \\psi,ω \\omega,Γ \\Gamma,Δ \\Delta,Θ \\Theta,Λ \\Lambda,Ξ \\Xi,Π \\Pi,Σ \\Sigma,Φ \\Phi,Ψ \\Psi,Ω \\Omega".split(",").map(s=>{const p=s.split(" ");return{show:p[0],tex:p[1]};});
-const SYM="±,∓,×,÷,·,≠,≤,≥,≈,≡,≅,∼,∝,∞,∑,∏,∫,∬,∮,∂,∇,√,∛,∠,∡,∢,∥,,△,▵,□,○,●,∈,∉,∋,⊂,,⊆,,∪,∩,∅,∀,∃,∄,¬,∧,∨,⇒,⇔,→,←,↑,↓,↔,↦,ℕ,ℤ,ℚ,ℝ,℃,‰,°,′,″,≌,∽".split(",").map(s=>({show:s,char:s}));
+const SYM=[
+  {show:"±",tex:"\\pm"},{show:"∓",tex:"\\mp"},{show:"×",tex:"\\times"},{show:"÷",tex:"\\div"},{show:"·",tex:"\\cdot"},
+  {show:"≠",tex:"\\neq"},{show:"≤",tex:"\\leq"},{show:"≥",tex:"\\geq"},{show:"≈",tex:"\\approx"},{show:"≡",tex:"\\equiv"},
+  {show:"≅",tex:"\\cong"},{show:"∼",tex:"\\sim"},{show:"∝",tex:"\\propto"},{show:"∞",tex:"\\infty"},
+  {show:"∑",tex:"\\sum"},{show:"∏",tex:"\\prod"},{show:"∫",tex:"\\int"},{show:"∬",tex:"\\iint"},{show:"∮",tex:"\\oint"},
+  {show:"∂",tex:"\\partial"},{show:"∇",tex:"\\nabla"},{show:"√",tex:"\\sqrt{}"},{show:"∛",tex:"\\sqrt[3]{}"},
+  {show:"∠",tex:"\\angle"},{show:"∥",tex:"\\parallel"},{show:"⊥",tex:"\\perp"},
+  {show:"△",tex:"\\triangle"},{show:"□",tex:"\\square"},{show:"○",tex:"\\circ"},{show:"●",tex:"\\bullet"},
+  {show:"∈",tex:"\\in"},{show:"∉",tex:"\\notin"},{show:"⊂",tex:"\\subset"},{show:"⊆",tex:"\\subseteq"},
+  {show:"∪",tex:"\\cup"},{show:"∩",tex:"\\cap"},{show:"∅",tex:"\\emptyset"},
+  {show:"∀",tex:"\\forall"},{show:"∃",tex:"\\exists"},{show:"¬",tex:"\\neg"},{show:"∧",tex:"\\wedge"},{show:"∨",tex:"\\vee"},
+  {show:"⇒",tex:"\\Rightarrow"},{show:"⇔",tex:"\\Leftrightarrow"},{show:"→",tex:"\\rightarrow"},{show:"←",tex:"\\leftarrow"},
+  {show:"↑",tex:"\\uparrow"},{show:"↓",tex:"\\downarrow"},{show:"↔",tex:"\\leftrightarrow"},{show:"↦",tex:"\\mapsto"},
+  {show:"ℕ",tex:"\\mathbb{N}"},{show:"ℤ",tex:"\\mathbb{Z}"},{show:"ℚ",tex:"\\mathbb{Q}"},{show:"ℝ",tex:"\\mathbb{R}"},
+  {show:"℃",char:"℃"},{show:"‰",char:"‰"},{show:"°",char:"°"},{show:"′",char:"′"},{show:"″",char:"″"},{show:"≌",tex:"\\cong"},{show:"∽",tex:"\\sim"}
+];
 const CHEM_COND=[["加热","\\ce{->[$\\Delta$]}"],["点燃","\\ce{->[点燃]}"],["高温","\\ce{->[高温]}"],["催化剂","\\ce{->[催化剂]}"],["MnO₂催化","\\ce{->[MnO2]}"],["通电","\\ce{->[通电]}"],["可逆","\\ce{<=>}"],["沉淀 ↓"," v"],["气体 ↑"," ^"]];
 
 const TEMPLATES={
@@ -720,7 +735,16 @@ function showSymbolPop(anchor,list,title){
   const pop=el("div","pop");pop.appendChild(el("div","ptitle",title));
   const grid=el("div","grid");
   list.forEach(it=>{const b=el("button","sbtn",esc(it.show));b.title=it.tex||it.char;
-    b.addEventListener("click",ev=>{ev.stopPropagation();insertAtCursor(it.tex?(" "+it.tex+" "):it.char);closePop();});grid.appendChild(b);});
+    b.addEventListener("click",ev=>{ev.stopPropagation();
+      if(it.tex){
+        // 希腊字母/数学命令：智能判断是否需要 $ 包裹
+        smartInsertMath(it.tex);
+      }else{
+        // 普通 Unicode 字符直接插入
+        insertAtCursor(it.char);
+      }
+      closePop();
+    });grid.appendChild(b);});
   pop.appendChild(grid);placePop(pop,anchor);
 }
 function showChemPop(anchor){
@@ -762,42 +786,42 @@ function showChemFormulaPop(anchor){
   pop.appendChild(grid);placePop(pop,anchor);
 }
 // 智能插入化学式：自动检测是否在公式块内，不在则自动加 $...$ 包裹
-function insertChemFormula(latex){
+// ★ 通用：检测光标是否在公式块（$..$ 或 $..$）内
+function isInMathBlock(){
   const pos=src.selectionStart;
   const text=src.value;
-  // 检测光标前最近的未闭合 $ 或 $
-  let inMath=false;
   // 先检查 $ 块级公式
   let lastDoubleDollar=-1;
   for(let i=0;i<pos;i++){
     if(text[i]==="$"&&text[i+1]==="$"){lastDoubleDollar=i;i++;}
   }
   if(lastDoubleDollar>=0){
-    // 检查后面是否有闭合的 $
     let closeIdx=text.indexOf("$",lastDoubleDollar+2);
-    if(closeIdx<0||closeIdx>pos)inMath=true; // 未闭合，在块级公式内
+    if(closeIdx<0||closeIdx>=pos)return true;
   }
   // 再检查 $ 行内公式
-  if(!inMath){
-    let lastDollar=-1;
-    for(let i=0;i<pos;i++){
-      if(text[i]==="$"&&(text[i+1]!=="$"))lastDollar=i;
-    }
-    if(lastDollar>=0){
-      // 检查后面是否有闭合的 $（且不是 $）
-      for(let i=lastDollar+1;i<pos;i++){
-        if(text[i]==="$"&&(text[i+1]!=="$")){lastDollar=-1;break;} // 已闭合
-      }
-      if(lastDollar>=0)inMath=true; // 未闭合，在行内公式内
-    }
+  let lastDollar=-1;
+  for(let i=0;i<pos;i++){
+    if(text[i]==="$"&&(text[i+1]!=="$"))lastDollar=i;
   }
-  if(inMath){
-    // 已在公式块内，直接插入
+  if(lastDollar>=0){
+    for(let i=lastDollar+1;i<pos;i++){
+      if(text[i]==="$"&&(text[i+1]!=="$")){lastDollar=-1;break;}
+    }
+    if(lastDollar>=0)return true;
+  }
+  return false;
+}
+// ★ 智能插入：自动判断是否在公式块内，不在就加 $...$ 包裹
+function smartInsertMath(latex){
+  if(isInMathBlock()){
     insertAtCursor(latex);
   }else{
-    // 不在公式块内，自动加 $...$ 包裹
     insertAtCursor("$"+latex+"$");
   }
+}
+function insertChemFormula(latex){
+  smartInsertMath(latex);
 }
 function placePop(pop,anchor){
   document.body.appendChild(pop);openPop=pop;
@@ -910,23 +934,72 @@ src.addEventListener("keydown",e=>{
     insertAtCursor("  ");
     return;
   }
-  // 自动补全括号/符号
+  // 智能括号补全：检测是否有未匹配的同类符号
   if(!e.ctrlKey&&!e.metaKey){
-    const pairs={"(":")","[":"]","{":"}","$":"$","*":"*","`":"`"};
-    if(pairs[e.key]){
+    const pairs={"(":")","[":"]","{":"}"};
+    const selfPairs={"$":"$","*":"*","`":"`"};
+    const s=src.selectionStart,end=src.selectionEnd;
+    const text=src.value;
+    const selected=text.slice(s,end);
+    
+    // 处理有选中文本的情况：任何配对符号都包裹选中文本
+    if(selected&&(pairs[e.key]||selfPairs[e.key])){
       e.preventDefault();
-      const s=src.selectionStart,end=src.selectionEnd;
-      const selected=src.value.slice(s,end);
-      if(selected){
-        src.value=src.value.slice(0,s)+e.key+selected+pairs[e.key]+src.value.slice(end);
-        src.selectionStart=s+1;
-        src.selectionEnd=s+1+selected.length;
-      }else{
-        src.value=src.value.slice(0,s)+e.key+pairs[e.key]+src.value.slice(end);
-        src.selectionStart=src.selectionEnd=s+1;
-      }
+      const close=pairs[e.key]||selfPairs[e.key];
+      src.value=text.slice(0,s)+e.key+selected+close+text.slice(end);
+      src.selectionStart=s+1;
+      src.selectionEnd=s+1+selected.length;
       render();
       return;
+    }
+    
+    // 处理 ( [ { 类：始终补全右括号
+    if(!selected&&pairs[e.key]){
+      e.preventDefault();
+      src.value=text.slice(0,s)+e.key+pairs[e.key]+text.slice(end);
+      src.selectionStart=src.selectionEnd=s+1;
+      render();
+      return;
+    }
+    
+    // 处理 $ * ` 自配对符号：智能判断
+    if(!selected&&selfPairs[e.key]){
+      const ch=e.key;
+      // 如果光标右边紧邻同类字符，直接跳过（不新增）
+      if(text[s]===ch){
+        e.preventDefault();
+        src.selectionStart=src.selectionEnd=s+1;
+        return;
+      }
+      // 统计前面和后面的同类字符数
+      let countBefore=0,countAfter=0;
+      for(let i=0;i<s;i++){if(text[i]===ch)countBefore++;}
+      for(let i=s;i<text.length;i++){if(text[i]===ch)countAfter++;}
+      // 判断逻辑：
+      // - 前面奇数（有孤立的等着闭合）→ 只插入一个，闭合前面的
+      // - 后面奇数（后面有孤立的等着配对）→ 只插入一个，配对后面的
+      // - 前后都是偶数（全部已配对）→ 新开一对，插入两个
+      if(countBefore%2===1||countAfter%2===1){
+        // 有孤立的，只插入一个字符去配对，不多补
+        return; // 放行默认输入行为
+      }else{
+        // 全部已配对，新开一对
+        e.preventDefault();
+        src.value=text.slice(0,s)+ch+ch+text.slice(end);
+        src.selectionStart=src.selectionEnd=s+1;
+        render();
+        return;
+      }
+    }
+    
+    // 处理右括号跳过：如果输入的是 ) ] } 且光标右侧就是对应字符，跳过
+    const closeChars={")":").","]":"].","}":"}."};
+    if(!selected&&(e.key===")"||e.key==="]"||e.key==="}")){
+      if(text[s]===e.key){
+        e.preventDefault();
+        src.selectionStart=src.selectionEnd=s+1;
+        return;
+      }
     }
   }
   // 快捷键
