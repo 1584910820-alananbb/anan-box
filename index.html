@@ -73,15 +73,30 @@ body{
 .btn.primary:hover{background:var(--blue-d);border-color:var(--blue-d);color:#fff;box-shadow:0 6px 16px rgba(0,123,255,.28)}
 .btn.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue)}
 
-.toolbar{padding:10px 14px;display:flex;flex-direction:column;gap:6px}
-.trow{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:4px 0;border-bottom:1px solid var(--line3)}
-.trow:last-child{border-bottom:0;padding-bottom:0}
-.trow .lab{font-size:11px;color:#fff;background:var(--blue);padding:2px 8px;border-radius:5px;margin-right:6px;user-select:none;white-space:nowrap;font-weight:600;letter-spacing:.03em}
-.trow .lab.chinese{background:#e67e22}
-.trow .lab.math{background:#9b59b6}
-.trow .lab.english{background:#27ae60}
-.trow .lab.chem{background:#e74c3c}
-.trow .lab.format{background:#7f8c8d}
+.toolbar-card{position:sticky;top:0;z-index:50}
+.tb-row1{display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--line3);flex-wrap:wrap}
+.tb-sep{width:1px;height:20px;background:var(--line2);margin:0 4px}
+.tb-row2{display:flex;align-items:center;gap:2px;padding:6px 14px;border-bottom:1px solid var(--line3);flex-wrap:wrap}
+.tb-row2 .fmtbtn{font-family:var(--sans);font-size:15px;cursor:pointer;color:var(--muted);
+  background:none;border:none;padding:5px 8px;line-height:1;border-radius:4px;transition:color .12s,background .12s}
+.tb-row2 .fmtbtn:hover{color:var(--blue);background:var(--blue-bg)}
+.tb-row2 .fmtbtn:active{transform:scale(.9)}
+.tb-row2 .fmtsep{width:1px;height:18px;background:var(--line3);margin:0 3px}
+.toolbar{padding:0}
+.tb-tabs{display:flex;gap:0;padding:0 10px;background:var(--th)}
+.tb-tab{font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);
+  background:none;border:none;border-bottom:2px solid transparent;padding:7px 12px;white-space:nowrap;transition:all .15s}
+.tb-tab:hover{color:var(--blue)}
+.tb-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tb-tab.chinese.active{color:#e67e22;border-bottom-color:#e67e22}
+.tb-tab.math.active{color:#9b59b6;border-bottom-color:#9b59b6}
+.tb-tab.english.active{color:#27ae60;border-bottom-color:#27ae60}
+.tb-tab.chem.active{color:#e74c3c;border-bottom-color:#e74c3c}
+.tb-tab.physics.active{color:#2980b9;border-bottom-color:#2980b9}
+.tb-tab.other.active{color:#7f8c8d;border-bottom-color:#7f8c8d}
+.trow{display:none;align-items:center;gap:5px;flex-wrap:wrap;padding:8px 14px}
+.trow.active{display:flex}
+.trow .lab{display:none}
 .tsep{width:1px;height:18px;background:var(--line2);margin:0 4px;flex:none}
 .ichip{font-family:var(--sans);font-size:15px;cursor:pointer;color:var(--muted);
   background:none;border:none;padding:4px 7px;line-height:1;white-space:nowrap;border-radius:4px;
@@ -255,23 +270,30 @@ body{
       </p>
     </div>
     <div class="head-actions">
-      <button class="btn" id="btn-import" title="从本机读取 .md / .txt 文件，不上传"><span class="ic">📥</span>导入</button>
-      <button class="btn" id="btn-template" title="套用内部题型骨架"><span class="ic">🗂</span>范式模板</button>
-      <button class="btn" id="btn-cheat" title="语法速查手册"><span class="ic">❔</span>语法速查</button>
-      <button class="btn on" id="btn-nosave" title="无痕模式：不向本机写入，关闭页面即清空"><span class="ic">🛡</span>无痕</button>
-      <button class="btn" id="btn-copyhtml" title="复制渲染后的 HTML"><span class="ic">⧉</span>复制 HTML</button>
-      <button class="btn" id="btn-download" title="下载为本机 .md 文件"><span class="ic">⤓</span>下载 .md</button>
-      <button class="btn primary" id="btn-copy" title="复制标准范式源码"><span class="ic">⎘</span>复制源码</button>
-      <button class="btn" id="btn-undo" title="撤销 (Ctrl+Z)"><span class="ic">↩</span>撤销</button>
-      <button class="btn" id="btn-redo" title="重做 (Ctrl+Y)"><span class="ic">↪</span>重做</button>
-      <button class="btn" id="btn-clear" title="清空当前编辑器内容"><span class="ic">🗑</span>一键清空</button>
-      <button class="btn" id="btn-shortcuts" title="快捷键帮助"><span class="ic">⌨</span>快捷键</button>
-      <button class="btn" id="btn-history" title="操作历史"><span class="ic">📜</span>历史</button>
-      <button class="btn" id="btn-darkmode" title="切换暗色/亮色模式"><span class="ic">🌙</span>暗色</button>
+      <button class="btn" id="btn-darkmode" title="切换暗色/亮色模式"><span class="ic">🌙</span></button>
+      <button class="btn" id="btn-shortcuts" title="快捷键帮助"><span class="ic">⌨</span></button>
+      <button class="btn" id="btn-cheat" title="语法速查手册"><span class="ic">❔</span></button>
+      <button class="btn" id="btn-history" title="操作历史"><span class="ic">📜</span></button>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card toolbar-card" id="toolbar-card">
+    <!-- 第一行：操作按钮 -->
+    <div class="tb-row1">
+      <button class="btn" id="btn-import" title="导入 .md/.txt"><span class="ic">📥</span>导入</button>
+      <button class="btn on" id="btn-nosave" title="无痕模式"><span class="ic">🛡</span>无痕</button>
+      <button class="btn" id="btn-copyhtml" title="复制 HTML"><span class="ic">⧉</span>复制HTML</button>
+      <button class="btn" id="btn-download" title="下载 .md"><span class="ic">⤓</span>下载.md</button>
+      <button class="btn primary" id="btn-copy" title="复制源码"><span class="ic">⎘</span>复制源码</button>
+      <span class="tb-sep"></span>
+      <button class="btn" id="btn-undo" title="撤销 Ctrl+Z"><span class="ic">↩</span>撤销</button>
+      <button class="btn" id="btn-redo" title="重做 Ctrl+Y"><span class="ic">↪</span>重做</button>
+      <button class="btn" id="btn-clear" title="一键清空"><span class="ic">🗑</span>一键清空</button>
+    </div>
+    <!-- 第二行：Markdown 格式（图标） -->
+    <div class="tb-row2" id="tb-format"></div>
+    <!-- 第三行：学科 Tab + 内容 -->
+    <div class="tb-tabs" id="tb-tabs"></div>
     <div class="toolbar" id="toolbar"></div>
   </div>
 
@@ -634,16 +656,52 @@ $
 
 /* 4. 工具栏 */
 function buildToolbar(){
-  const tb=$("#toolbar");
-  const row=(lab,cls)=>{const r=el("div","trow");const l=el("span","lab "+(cls||""),lab);r.appendChild(l);tb.appendChild(r);return r;};
+  const tb=$("#toolbar"),tabs=$("#tb-tabs");
+  const tabList=[];
+  const row=(lab,cls)=>{
+    const r=el("div","trow");r.dataset.tab=cls||"default";
+    const l=el("span","lab "+(cls||""),lab);r.appendChild(l);tb.appendChild(r);
+    // 创建对应的 tab 按钮
+    if(!tabList.find(t=>t.cls===cls)){
+      const tab=el("button","tb-tab "+(cls||""),lab);tab.dataset.tab=cls||"default";
+      tabs.appendChild(tab);tabList.push({cls,tab});
+    }
+    return r;
+  };
   const chip=(parent,label,title,text)=>{const b=el("button","chip",esc(label));b.title=title;b.addEventListener("click",()=>onChip(text,b));parent.appendChild(b);};
 
+  // ★ 第二行：Markdown 格式图标（固定显示）
+  const fmt=$("#tb-format");
+  const fic=(icon,title,text)=>{const b=el("button","fmtbtn",icon);b.title=title;b.addEventListener("click",()=>onChip(text,b));fmt.appendChild(b);};
+  const fsep=()=>{fmt.appendChild(el("span","fmtsep"));};
+  fic("B","加粗 Ctrl+B","**文本**");fic("I","斜体 Ctrl+I","*文本*");fic("H","标题","## ");
+  fsep();
+  fic("U","下划线 Ctrl+U","<u>文本</u>");fic("S","删除线 Ctrl+S","~~文本~~");fic("⌂","高亮标记","<mark>文本</mark>");
+  fsep();
+  fic("x²","上标","$x^{2}$");fic("x₂","下标","$x_{1}$");
+  fsep();
+  fic("☰","左对齐","__align_left__");fic("≡","居中对齐","__align_center__");fic("⫶","右对齐","__align_right__");
+  fsep();
+  fic("❝","引用","> 引用内容");fic("⋮","有序列表","1. 第一步\n2. 第二步");fic("•","无序列表","- 项目一\n- 项目二");
+  fsep();
+  fic("🔗","链接 Ctrl+K","[文字](https://)");fic("🖼","图片","![描述](url)");fic("⟨/⟩","代码块","`code`");fic("▤","表格","__gen_table__");
+
+  // ── 第三行：学科 Tab 内容
+  // ── 其他
+  let r=row("其他","other");
+  chip(r,"📋 规范回复模版","规范回复模版","## 1.解题思路 ##\n> [一句话解题核心技巧/方法/思路]\n### 解题步骤： ###\n1. 第一步XXX\n2. 第二步XXX\n3. 第三步XXX\n4. 第四步XXX\n5. ...\n\n![解析图片(如有需要)](url)\n\n## 2.标准解题过程/标准答案 ##\n> [具体解题过程/答案]\n\n>![解题过程/答案图片(如有需要)](url)\n");
+  chip(r,"📝 选择题","选择题模版","__tpl_选择题__");
+  chip(r,"📝 填空题","填空题模版","__tpl_填空题__");
+  chip(r,"📝 判断题","判断题模版","__tpl_判断题__");
+  chip(r,"📝 解答题","解答题模版","__tpl_解答题__");
+
   // ── 语文（橙色）
-  let r=row("语文","chinese");
+  r=row("语文","chinese");
   chip(r,"拼 注音","拼音注音","<ruby>字<rt>zì</rt></ruby>");
   chip(r,"ā 声调","带声调拼音面板","__pop_pinyin__");
   chip(r,"田 田字格","田字格生成器","__gen_tzg__");
   chip(r,"═ 四线格","四线三格","<span class=\"sxg\">Aa</span>");
+  chip(r,"📝 语文注音","语文注音模版","__tpl_语文注音__");
 
   // ── 数学（紫色）
   r=row("数学","math");
@@ -652,6 +710,17 @@ function buildToolbar(){
   chip(r,"→ 向量","向量","$\\vec{a}$");chip(r,"▦ 矩阵","矩阵生成器","__gen_matrix__");chip(r,"{ 方程组","方程组/分段","__gen_cases__");
   chip(r,"▥ 竖式","竖式生成器","__gen_vcalc__");
   chip(r,"α 希腊","希腊字母面板","__pop_greek__");chip(r,"± 符号","常用符号面板","__pop_sym__");
+  chip(r,"📐 计算题(解)","计算题解模版","__tpl_计算题（解）__");
+  chip(r,"📐 多行等式","多行等式模版","__tpl_多行等式__");
+  chip(r,"📐 解方程","解方程模版","__tpl_解方程__");
+  chip(r,"📐 解方程组","解方程组模版","__tpl_解方程组__");
+  chip(r,"📐 分段函数","分段函数模版","__tpl_分段函数__");
+  chip(r,"📐 解不等式","解不等式模版","__tpl_解不等式__");
+  chip(r,"📐 向量运算","向量运算模版","__tpl_向量运算__");
+  chip(r,"📊 分布列","分布列模版","__tpl_分布列（离散型）__");
+  chip(r,"📊 二项分布","二项分布模版","__tpl_二项分布__");
+  chip(r,"📊 超几何分布","超几何分布模版","__tpl_超几何分布__");
+  chip(r,"📊 正态分布","正态分布模版","__tpl_正态分布__");
 
   // ── 英语（绿色）
   r=row("英语","english");
@@ -666,20 +735,21 @@ function buildToolbar(){
   chip(r,"↑ 气体","气体符号"," \\uparrow ");chip(r,"↓ 沉淀","沉淀符号"," \\downarrow ");
   chip(r,"⇌ 可逆","可逆箭头","\\rightleftharpoons ");
 
-  // ── 其他
-  r=row("其他","format");
-  chip(r,"📋 规范回复模版","规范回复模版","## 1.解题思路 ##\n> [一句话解题核心技巧/方法/思路]\n### 解题步骤： ###\n1. 第一步XXX\n2. 第二步XXX\n3. 第三步XXX\n4. 第四步XXX\n5. ...\n\n![解析图片(如有需要)](url)\n\n## 2.标准解题过程/标准答案 ##\n> [具体解题过程/答案]\n\n>![解题过程/答案图片(如有需要)](url)\n");
+  // ── 物理（蓝色）
+  r=row("物理","physics");
+  chip(r,"📐 物理-力学","物理力学模版","__tpl_物理-力学__");
 
-  // ── Markdown 排版（图标风格）
-  r=row("排版","format");
-  const ic=(parent,icon,title,text)=>{const b=el("button","ichip",icon);b.title=title;b.addEventListener("click",()=>onChip(text,b));parent.appendChild(b);};
-  ic(r,"B","加粗 (Ctrl+B)","**文本**");ic(r,"I","斜体 (Ctrl+I)","*文本*");ic(r,"H","标题","## ");ic(r,"U","下划线 (Ctrl+U)","<u>文本</u>");
-  ic(r,"S","删除线 (Ctrl+S)","~~文本~~");ic(r,"x²","上标","$x^{2}$");ic(r,"x₂","下标","$x_{1}$");
-  ic(r,"≡","居中对齐","__align_center__");
-  ic(r,"❝","引用","> 引用内容");ic(r,"🔗","链接 (Ctrl+K)","[文字](https://)");
-  ic(r,"🖼","图片","![描述](url)");ic(r,"⟨/⟩","代码 (Ctrl+`)","`code`");ic(r,"▤","表格","__gen_table__");
-  ic(r,"⋮","有序列表","1. 第一步\n2. 第二步");ic(r,"•","无序列表","- 项目一\n- 项目二");
-  ic(r,"―","分割线","\n---\n");
+  // ★ Tab 切换逻辑：点击 tab 显示对应行
+  function switchTab(cls){
+    tabs.querySelectorAll(".tb-tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===cls));
+    tb.querySelectorAll(".trow").forEach(r=>r.classList.toggle("active",r.dataset.tab===cls));
+  }
+  tabs.addEventListener("click",e=>{
+    const t=e.target.closest(".tb-tab");if(!t)return;
+    switchTab(t.dataset.tab);
+  });
+  // 默认激活第一个 tab
+  if(tabList.length>0)switchTab(tabList[0].cls);
 }
 
 let openPop=null;
@@ -688,6 +758,13 @@ document.addEventListener("click",e=>{if(openPop&&!e.target.closest(".pop")&&!e.
 
 function onChip(text,anchor){
   closePop();
+  // 模板快捷插入：__tpl_模板名__
+  if(text.startsWith("__tpl_")&&text.endsWith("__")){
+    const name=text.slice(6,-2);
+    if(TEMPLATES[name]){insertAtCursor(TEMPLATES[name]);toast("📐 已插入："+name);}
+    else toast("未找到模板："+name);
+    return;
+  }
   if(text==="__pop_greek__")return showSymbolPop(anchor,GREEK,"希腊字母（点击插入命令，置于 $ 内）");
   if(text==="__pop_sym__")return showSymbolPop(anchor,SYM,"常用符号（点击直接插入）");
   if(text==="__pop_chem__")return showChemPop(anchor);
@@ -699,7 +776,9 @@ function onChip(text,anchor){
   if(text==="__gen_table__")return genTable();
   if(text==="__gen_tzg__")return genTzg();
   if(text==="__gen_vcalc__")return genVcalc();
+  if(text==="__align_left__")return wrapSelection('<div style="text-align:left">',"</div>","左对齐文本");
   if(text==="__align_center__")return wrapSelection('<div style="text-align:center">',"</div>","居中文本");
+  if(text==="__align_right__")return wrapSelection('<div style="text-align:right">',"</div>","右对齐文本");
   // 格式操作：包裹选中文本
   if(text==="**文本**")return wrapSelection("**","**","文本");
   if(text==="*文本*")return wrapSelection("*","*","文本");
@@ -765,29 +844,28 @@ function showChemPop(anchor){
 }
 // 常见化学式面板
 function showChemFormulaPop(anchor){
-  const pop=el("div","pop");pop.style.maxWidth="420px";
-  pop.appendChild(el("div","ptitle","初高中常见化学式（点击插入 LaTeX）"));
-  const grid=el("div","grid w6");
-  const formulas=[
-    // 单质
-    ["O₂","O_2"],["H₂","H_2"],["N₂","N_2"],["Cl₂","Cl_2"],["Fe","Fe"],["Cu","Cu"],["C","C"],["S","S"],
-    // 氧化物
-    ["H₂O","H_2O"],["CO₂","CO_2"],["CO","CO"],["SO₂","SO_2"],["SO₃","SO_3"],["NO₂","NO_2"],["Fe₂O₃","Fe_2O_3"],["CuO","CuO"],["CaO","CaO"],["MgO","MgO"],["Al₂O₃","Al_2O_3"],
-    // 酸
-    ["HCl","HCl"],["H₂SO₄","H_2SO_4"],["HNO₃","HNO_3"],["H₂CO₃","H_2CO_3"],["H₃PO₄","H_3PO_4"],
-    // 碱
-    ["NaOH","NaOH"],["Ca(OH)₂","Ca(OH)_2"],["KOH","KOH"],["Ba(OH)₂","Ba(OH)_2"],["Al(OH)₃","Al(OH)_3"],["Fe(OH)₃","Fe(OH)_3"],
-    // 盐
-    ["NaCl","NaCl"],["CaCO₃","CaCO_3"],["Na₂CO₃","Na_2CO_3"],["NaHCO₃","NaHCO_3"],["CuSO₄","CuSO_4"],["BaSO₄","BaSO_4"],["AgNO₃","AgNO_3"],["KMnO₄","KMnO_4"],["AgCl","AgCl"],
-    // 有机物
-    ["CH₄","CH_4"],["C₂H₅OH","C_2H_5OH"],["CH₃COOH","CH_3COOH"],["C₆H₁₂O₆","C_6H_{12}O_6"],["C₂H₄","C_2H_4"],["C₂H₂","C_2H_2"]
+  const pop=el("div","pop");pop.style.maxWidth="460px";
+  pop.appendChild(el("div","ptitle","初高中常见化学式（按类别分组，点击插入）"));
+  const categories=[
+    {name:"单质",items:[["O₂","O_2"],["H₂","H_2"],["N₂","N_2"],["Cl₂","Cl_2"],["Fe","Fe"],["Cu","Cu"],["C","C"],["S","S"]]},
+    {name:"氧化物",items:[["H₂O","H_2O"],["CO₂","CO_2"],["CO","CO"],["SO₂","SO_2"],["SO₃","SO_3"],["NO₂","NO_2"],["Fe₂O₃","Fe_2O_3"],["CuO","CuO"],["CaO","CaO"],["MgO","MgO"],["Al₂O₃","Al_2O_3"]]},
+    {name:"酸",items:[["HCl","HCl"],["H₂SO₄","H_2SO_4"],["HNO₃","HNO_3"],["H₂CO₃","H_2CO_3"],["H₃PO₄","H_3PO_4"]]},
+    {name:"碱",items:[["NaOH","NaOH"],["Ca(OH)₂","Ca(OH)_2"],["KOH","KOH"],["Ba(OH)₂","Ba(OH)_2"],["Al(OH)₃","Al(OH)_3"],["Fe(OH)₃","Fe(OH)_3"]]},
+    {name:"盐",items:[["NaCl","NaCl"],["CaCO₃","CaCO_3"],["Na₂CO₃","Na_2CO_3"],["NaHCO₃","NaHCO_3"],["CuSO₄","CuSO_4"],["BaSO₄","BaSO_4"],["AgNO₃","AgNO_3"],["KMnO₄","KMnO_4"],["AgCl","AgCl"]]},
+    {name:"有机物",items:[["CH₄","CH_4"],["C₂H₅OH","C_2H_5OH"],["CH₃COOH","CH_3COOH"],["C₆H₁₂O₆","C_6H_{12}O_6"],["C₂H₄","C_2H_4"],["C₂H₂","C_2H_2"]]}
   ];
-  formulas.forEach(([name,latex])=>{
-    const b=el("button","sbtn",name);b.style.fontSize="12px";b.style.fontFamily="var(--sans)";
-    b.addEventListener("click",ev=>{ev.stopPropagation();insertChemFormula(latex);closePop();});
-    grid.appendChild(b);
+  categories.forEach(cat=>{
+    const label=el("div",null,"");label.style.cssText="font-size:11px;color:var(--muted);margin:6px 0 3px;font-weight:600;";label.textContent=cat.name;
+    pop.appendChild(label);
+    const grid=el("div","grid w6");
+    cat.items.forEach(([name,latex])=>{
+      const b=el("button","sbtn",name);b.style.fontSize="12px";b.style.fontFamily="var(--sans)";
+      b.addEventListener("click",ev=>{ev.stopPropagation();insertChemFormula(latex);closePop();});
+      grid.appendChild(b);
+    });
+    pop.appendChild(grid);
   });
-  pop.appendChild(grid);placePop(pop,anchor);
+  placePop(pop,anchor);
 }
 // 智能插入化学式：自动检测是否在公式块内，不在则自动加 $...$ 包裹
 // ★ 通用：检测光标是否在公式块（$..$ 或 $..$）内
@@ -1394,14 +1472,6 @@ function vmul(a,b){
 }
 
 /* 10. 模板 / 速查 */
-$("#btn-template").addEventListener("click",e=>{
-  closePop();const pop=el("div","pop");pop.appendChild(el("div","ptitle","插入内部范式模板（将替换当前内容）"));
-  const grid=el("div","grid w6");
-  Object.keys(TEMPLATES).forEach(name=>{const b=el("button","sbtn",esc(name));b.style.fontFamily="var(--sans)";b.style.fontSize="12px";
-    b.addEventListener("click",ev=>{ev.stopPropagation();if(src.value.trim()&&!confirm("插入模板将覆盖当前内容，继续？")){closePop();return;}src.value=TEMPLATES[name];render();closePop();toast("🗂 已载入模板："+name);});
-    grid.appendChild(b);});
-  pop.appendChild(grid);placePop(pop,e.currentTarget);
-});
 $("#btn-cheat").addEventListener("click",()=>{
   modal("语法速查手册",ctx=>{
     const d=el("div","cheat");
@@ -1434,8 +1504,7 @@ $$\\ce{2KClO3 ->[MnO2][$\\Delta$] 2KCl + 3O2 ^}$$
 
 ## 四、竖式（LaTeX 逐位对齐）
 
-**1.加法 $123 + 45$：**
-
+加法 $123 + 45$：
 $$
 \\begin{array}{cccc}
   & 1 & 2 & 3 \\\\
@@ -1445,8 +1514,7 @@ $$
 \\end{array}
 $$
 
-**2.乘法 $123 \\times 45$：**
-
+乘法 $123 \\times 45$：
 $$
 \\begin{array}{cccccc}
   &   &   & 1 & 2 & 3 \\\\
@@ -1459,9 +1527,8 @@ $$
 \\end{array}
 $$
 
-**3.除法 $12345 \\div 5$：**
-
-$$
+除法 $12345 \\div 5$：
+$
 \\begin{array}{r}
 2469 \\\\[2pt]
 5\\enclose{longdiv}{12345} \\\\[2pt]
@@ -1474,9 +1541,9 @@ $$
 \\underline{45} \\\\[2pt]
 0
 \\end{array}
-$$
+$
 
-> $\\triangle$ 如有新的难表达的公式请找 **安安** ~
+> 每位数字独立一列，个十百千位严格对齐。用工具栏「▥ 竖式」一键生成。
 `;
 function afterBoot(){
   buildToolbar();
