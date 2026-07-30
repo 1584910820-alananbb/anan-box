@@ -1329,7 +1329,7 @@ function genVcalc(){
       catch(e){pv.innerHTML='<span class="math-err">'+esc(e.message)+'</span>';}
     }
     ia.addEventListener("input",upd);ib.addEventListener("input",upd);upd();ctx._get=()=>({op,a:ia.value,b:ib.value});
-  },ctx=>{const{op,a,b}=ctx._get();const latex=buildVcalcLatex(op,a,b);ctx.insert("\n$\n"+latex+"\n$\n");});
+  },ctx=>{const{op,a,b}=ctx._get();const latex=buildVcalcLatex(op,a,b);ctx.insert("\n$$\n"+latex+"\n$$\n");});
 }
 function buildVcalcLatex(op,a,b){
   a=String(a).trim();b=String(b).trim();
@@ -1528,7 +1528,7 @@ $$
 $$
 
 除法 $12345 \\div 5$：
-$
+$$
 \\begin{array}{r}
 2469 \\\\[2pt]
 5\\enclose{longdiv}{12345} \\\\[2pt]
@@ -1541,7 +1541,7 @@ $
 \\underline{45} \\\\[2pt]
 0
 \\end{array}
-$
+$$
 
 > 每位数字独立一列，个十百千位严格对齐。用工具栏「▥ 竖式」一键生成。
 `;
