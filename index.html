@@ -1490,25 +1490,30 @@ function buildDecimalCalc(nums,ops,result){
   
   // 计算进位/退位（跳过小数点位置）
   if(op==="+"&&nums.length===2){
-    // 合并整数和小数部分用于计算
-    const aFull=parts[0].int+parts[0].dec;
-    const bFull=parts[1].int+parts[1].dec;
-    const carryRow=Array(totalDigits).fill(" ");
+    // 合并整数和小数部分用于计算（去掉小数点，补零对齐）
+    const aFull=(parts[0].int+parts[0].dec).padStart(maxIntLen+maxDecLen,"0");
+    const bFull=(parts[1].int+parts[1].dec).padStart(maxIntLen+maxDecLen,"0");
+    const fullLen=maxIntLen+maxDecLen;
+    const carryRow=Array(fullLen).fill(" ");
     let carry=0;
-    for(let i=totalDigits-1;i>=0;i--){
-      // 跳过小数点位置（maxIntLen）
-      if(i===maxIntLen) continue;
-      const da=+aFull[i<maxIntLen?i:i-1];
-      const db=+bFull[i<maxIntLen?i:i-1];
+    // 从右到左逐位计算
+    for(let i=fullLen-1;i>=0;i--){
+      const da=+aFull[i];
+      const db=+bFull[i];
       const sum=da+db+carry;
       carry=Math.floor(sum/10);
-      if(carry>0&&i>0&&i!==maxIntLen+1) carryRow[i-1]="\\textcolor{red}{\\tiny "+carry+"}";
+      if(carry>0&&i>0) carryRow[i-1]="\\textcolor{red}{\\tiny "+carry+"}";
     }
+    // 生成进位行（插入小数点位置）
     if(carryRow.some(c=>c!==" ")){
       const cells=[" "];
-      for(let i=0;i<totalDigits;i++){
-        if(i===maxIntLen) cells.push(" "); // 小数点位置不放进位
-        else cells.push(carryRow[i]);
+      let carryIdx=0;
+      for(let i=0;i<maxIntLen;i++){
+        cells.push(carryRow[carryIdx++]);
+      }
+      cells.push(" "); // 小数点位置
+      for(let i=0;i<maxDecLen;i++){
+        cells.push(carryRow[carryIdx++]);
       }
       lines.push(cells.join(" & "));
     }
@@ -1516,14 +1521,14 @@ function buildDecimalCalc(nums,ops,result){
   
   if(op==="-"&&nums.length===2){
     // 减法退位标记
-    const aFull=parts[0].int+parts[0].dec;
-    const bFull=parts[1].int+parts[1].dec;
-    const borrowMark=Array(totalDigits).fill(false);
+    const aFull=(parts[0].int+parts[0].dec).padStart(maxIntLen+maxDecLen,"0");
+    const bFull=(parts[1].int+parts[1].dec).padStart(maxIntLen+maxDecLen,"0");
+    const fullLen=maxIntLen+maxDecLen;
+    const borrowMark=Array(fullLen).fill(false);
     let borrow=0;
-    for(let i=totalDigits-1;i>=0;i--){
-      if(i===maxIntLen) continue; // 跳过小数点
-      const da=+aFull[i<maxIntLen?i:i-1];
-      const db=+bFull[i<maxIntLen?i:i-1];
+    for(let i=fullLen-1;i>=0;i--){
+      const da=+aFull[i];
+      const db=+bFull[i];
       if(da-borrow<db&&i>0){borrowMark[i-1]=true;borrow=1;}
       else{borrow=0;}
     }
@@ -1537,7 +1542,7 @@ function buildDecimalCalc(nums,ops,result){
     cells.push(".");
     for(let i=0;i<maxDecLen;i++){
       const d=parts[0].dec[i];
-      const idx=maxIntLen+1+i;
+      const idx=maxIntLen+i;
       if(borrowMark[idx]&&d!==" ") cells.push("\\overset{\\textcolor{red}{\\Large\\cdot}}{"+d+"}");
       else cells.push(d);
     }
