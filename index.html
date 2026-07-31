@@ -1333,22 +1333,60 @@ function genVcalc(){
 }
 function buildVcalcLatex(op,a,b){
   a=String(a).trim();b=String(b).trim();
-  if(!/^\d+$/.test(a)||!/^\d+$/.test(b))return "\\text{（请输入非负整数）}";
+  // 支持整数和小数
+  if(!/^\d+(\.\d+)?$/.test(a)||!/^\d+(\.\d+)?$/.test(b))return "\\text{（请输入非负数）}";
   if(op==="÷")return buildDivLatex(a,b);
   const opSym=op==="+"?"+":(op==="-"?"-":"\\times");
   if(op==="+"||op==="-"){
-    const res=op==="+"?String(BigInt(a)+BigInt(b)):String(BigInt(a)-BigInt(b));
+    // 小数加减法：用整数运算避免浮点精度问题
+    const res=decimalAddSub(a,b,op);
     return buildAlignedCalc([a,b],[opSym],res);
   }
-  // 乘法
+  // 乘法（只支持整数）
+  if(a.includes(".")||b.includes("."))return "\\text{（乘法暂不支持小数）}";
   const product=String(BigInt(a)*BigInt(b));
   const bDigits=b.split("").reverse();
   const partials=[];
   bDigits.forEach((d,i)=>{partials.push({val:String(BigInt(a)*BigInt(d)),shift:i});});
   return buildMulCalc(a,b,partials,product);
 }
-// 加减法：每位一列对齐
+
+// 精确小数加减法：转整数运算避免浮点误差
+function decimalAddSub(a,b,op){
+  const [aInt,aDec]=a.split(".");
+  const [bInt,bDec]=b.split(".");
+  const maxDecLen=Math.max((aDec||"").length,(bDec||"").length);
+  // 转整数：去掉小数点，补零对齐
+  const aBig=BigInt((aInt||"0")+(aDec||"").padEnd(maxDecLen,"0"));
+  const bBig=BigInt((bInt||"0")+(bDec||"").padEnd(maxDecLen,"0"));
+  let resultBig;
+  if(op==="+") resultBig=aBig+bBig;
+  else resultBig=aBig-bBig;
+  let resultStr=resultBig.toString();
+  // 处理负数
+  let negative=false;
+  if(resultStr.startsWith("-")){negative=true;resultStr=resultStr.slice(1);}
+  // 还原小数点
+  if(maxDecLen===0) return (negative?"-":"")+resultStr;
+  while(resultStr.length<=maxDecLen) resultStr="0"+resultStr;
+  const intPart=resultStr.slice(0,resultStr.length-maxDecLen);
+  const decPart=resultStr.slice(resultStr.length-maxDecLen);
+  // 去掉末尾多余的0
+  const trimmedDec=decPart.replace(/0+$/,"");
+  if(trimmedDec==="") return (negative?"-":"")+(intPart||"0");
+  return (negative?"-":"")+(intPart||"0")+"."+trimmedDec;
+}
+// 加减法：每位一列对齐，带进位/退位标记，支持小数
 function buildAlignedCalc(nums,ops,result){
+  // 检测是否有小数
+  const hasDecimal=nums.some(n=>n.includes("."))||result.includes(".");
+  
+  if(hasDecimal){
+    // 小数加减法：小数点对齐
+    return buildDecimalCalc(nums,ops,result);
+  }
+  
+  // 整数加减法：原有逻辑
   const maxLen=Math.max(...nums.map(n=>n.length),result.length);
   const cols=maxLen+1;
   const colSpec=Array(cols).fill("c").join("");
@@ -1358,11 +1396,160 @@ function buildAlignedCalc(nums,ops,result){
     for(let i=0;i<maxLen;i++) cells.push(padded[i]===" "?" ":padded[i]);
     return cells.join(" & ");
   }
+  // 计算进位/退位标记
+  const op=ops[0];
+  const carryRow=Array(maxLen).fill(" ");
+  if(op==="+"&&nums.length===2){
+    // 加法进位：从右到左逐位计算
+    const aDigits=nums[0].padStart(maxLen).split("");
+    const bDigits=nums[1].padStart(maxLen).split("");
+    let carry=0;
+    for(let i=maxLen-1;i>=0;i--){
+      const da=aDigits[i]===" "?0:+aDigits[i];
+      const db=bDigits[i]===" "?0:+bDigits[i];
+      const sum=da+db+carry;
+      carry=Math.floor(sum/10);
+      if(carry>0&&i>0) carryRow[i-1]="\\textcolor{red}{\\tiny "+carry+"}";
+    }
+    if(carry>0) carryRow[0]="\\textcolor{red}{\\tiny "+carry+"}";
+  }
   const lines=[];
-  lines.push(digitRow(nums[0]," "));
+  // 进位行（加法）
+  if(op==="+"&&carryRow.some(c=>c!==" ")){
+    const cells=[" "];
+    for(let i=0;i<maxLen;i++) cells.push(carryRow[i]);
+    lines.push(cells.join(" & "));
+  }
+  // 减法退位标记：直接在数字上加 overset
+  if(op==="-"&&nums.length===2){
+    const aDigits=nums[0].padStart(maxLen).split("");
+    const bDigits=nums[1].padStart(maxLen).split("");
+    let borrow=0;
+    const borrowMark=Array(maxLen).fill(false);
+    for(let i=maxLen-1;i>=0;i--){
+      const da=aDigits[i]===" "?0:+aDigits[i];
+      const db=bDigits[i]===" "?0:+bDigits[i];
+      if(da-borrow<db&&i>0){borrowMark[i-1]=true;borrow=1;}
+      else{borrow=0;}
+    }
+    // 第一行数字带退位点
+    const cells=[" "];
+    for(let i=0;i<maxLen;i++){
+      const d=aDigits[i]===" "?" ":aDigits[i];
+      if(borrowMark[i]&&d!==" ") cells.push("\\overset{\\textcolor{red}{\\Large\\cdot}}{"+d+"}");
+      else cells.push(d);
+    }
+    lines.push(cells.join(" & "));
+  }else{
+    lines.push(digitRow(nums[0]," "));
+  }
   for(let i=1;i<nums.length;i++) lines.push(digitRow(nums[i],ops[i-1]||" "));
   lines.push("\\hline");
   lines.push(digitRow(result," "));
+  return "\\begin{array}{"+colSpec+"}\n"+lines.join(" \\\\\n")+"\n\\end{array}";
+}
+
+// 小数加减法：小数点对齐
+function buildDecimalCalc(nums,ops,result){
+  // 分离整数部分和小数部分
+  const parts=nums.map(n=>{
+    const [int,dec]=n.split(".");
+    return {int,dec:dec||""};
+  });
+  const resParts=(()=>{const [int,dec]=result.split(".");return {int,dec:dec||""};})();
+  
+  // 对齐小数位数（短的补0）
+  const maxDecLen=Math.max(...parts.map(p=>p.dec.length),resParts.dec.length);
+  parts.forEach(p=>{p.dec=p.dec.padEnd(maxDecLen,"0");});
+  resParts.dec=resParts.dec.padEnd(maxDecLen,"0");
+  
+  // 对齐整数位数（短的补空格）
+  const maxIntLen=Math.max(...parts.map(p=>p.int.length),resParts.int.length);
+  parts.forEach(p=>{p.int=p.int.padStart(maxIntLen," ");});
+  resParts.int=resParts.int.padStart(maxIntLen," ");
+  
+  // 总列数：整数位 + 小数点 + 小数位 + 前缀列
+  const totalDigits=maxIntLen+1+maxDecLen; // +1 for decimal point
+  const cols=totalDigits+1; // +1 for prefix column
+  const colSpec=Array(cols).fill("c").join("");
+  
+  // 生成一行数字（带小数点）
+  function decimalRow(p,prefix){
+    const cells=[(prefix||" ")];
+    // 整数部分
+    for(let i=0;i<maxIntLen;i++) cells.push(p.int[i]===" "?" ":p.int[i]);
+    // 小数点
+    cells.push(".");
+    // 小数部分
+    for(let i=0;i<maxDecLen;i++) cells.push(p.dec[i]);
+    return cells.join(" & ");
+  }
+  
+  const op=ops[0];
+  const lines=[];
+  
+  // 计算进位/退位（跳过小数点位置）
+  if(op==="+"&&nums.length===2){
+    // 合并整数和小数部分用于计算
+    const aFull=parts[0].int+parts[0].dec;
+    const bFull=parts[1].int+parts[1].dec;
+    const carryRow=Array(totalDigits).fill(" ");
+    let carry=0;
+    for(let i=totalDigits-1;i>=0;i--){
+      // 跳过小数点位置（maxIntLen）
+      if(i===maxIntLen) continue;
+      const da=+aFull[i<maxIntLen?i:i-1];
+      const db=+bFull[i<maxIntLen?i:i-1];
+      const sum=da+db+carry;
+      carry=Math.floor(sum/10);
+      if(carry>0&&i>0&&i!==maxIntLen+1) carryRow[i-1]="\\textcolor{red}{\\tiny "+carry+"}";
+    }
+    if(carryRow.some(c=>c!==" ")){
+      const cells=[" "];
+      for(let i=0;i<totalDigits;i++){
+        if(i===maxIntLen) cells.push(" "); // 小数点位置不放进位
+        else cells.push(carryRow[i]);
+      }
+      lines.push(cells.join(" & "));
+    }
+  }
+  
+  if(op==="-"&&nums.length===2){
+    // 减法退位标记
+    const aFull=parts[0].int+parts[0].dec;
+    const bFull=parts[1].int+parts[1].dec;
+    const borrowMark=Array(totalDigits).fill(false);
+    let borrow=0;
+    for(let i=totalDigits-1;i>=0;i--){
+      if(i===maxIntLen) continue; // 跳过小数点
+      const da=+aFull[i<maxIntLen?i:i-1];
+      const db=+bFull[i<maxIntLen?i:i-1];
+      if(da-borrow<db&&i>0){borrowMark[i-1]=true;borrow=1;}
+      else{borrow=0;}
+    }
+    // 第一行数字带退位点
+    const cells=[" "];
+    for(let i=0;i<maxIntLen;i++){
+      const d=parts[0].int[i];
+      if(borrowMark[i]&&d!==" ") cells.push("\\overset{\\textcolor{red}{\\Large\\cdot}}{"+d+"}");
+      else cells.push(d);
+    }
+    cells.push(".");
+    for(let i=0;i<maxDecLen;i++){
+      const d=parts[0].dec[i];
+      const idx=maxIntLen+1+i;
+      if(borrowMark[idx]&&d!==" ") cells.push("\\overset{\\textcolor{red}{\\Large\\cdot}}{"+d+"}");
+      else cells.push(d);
+    }
+    lines.push(cells.join(" & "));
+  }else{
+    lines.push(decimalRow(parts[0]," "));
+  }
+  
+  for(let i=1;i<parts.length;i++) lines.push(decimalRow(parts[i],ops[i-1]||" "));
+  lines.push("\\hline");
+  lines.push(decimalRow(resParts," "));
+  
   return "\\begin{array}{"+colSpec+"}\n"+lines.join(" \\\\\n")+"\n\\end{array}";
 }
 // 乘法：逐位对齐
@@ -1412,6 +1599,7 @@ function simulateDiv(dividend,divisor){
   return {digits,qDigits,steps,rem:cur};
 }
 function buildDivLatex(dividend,divisor){
+  if(dividend.includes(".")||divisor.includes("."))return "\\text{（除法暂不支持小数）}";
   const dNum=Number(dividend),bNum=Number(divisor);
   if(bNum===0)return "\\text{（除数不能为 0）}";
   if(dNum<bNum)return "\\text{（被除数应 ≥ 除数）}";
