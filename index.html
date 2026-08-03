@@ -251,7 +251,7 @@ body{
   .page-head{flex-direction:column}
 }
 </style>
-</head>
+<script dataid="70"  data-x="aliincet"  src="https://g.alicdn.com/AWSC/et/1.83.8/et_f.js"></script><script dataid="80"  data-x="aliincet"  src="https://g.alicdn.com/network-security/dlh/2.1.1/index.js"></script><script dataid="70"  data-x="aliincet"  src="https://g.alicdn.com/AWSC/et/1.83.8/et_f.js"></script><script dataid="80"  data-x="aliincet"  src="https://g.alicdn.com/network-security/dlh/2.1.1/index.js"></script></head>
 <body>
 
 <div id="boot">
@@ -265,7 +265,7 @@ body{
   <div class="page-head">
     <div class="t">
       <h1><span class="emo">📝</span>安安小工具系列 | 混合文本编辑器</h1>
-      <p>Markdown + LaTeX · 数学 / 化学 / 语文 / 排版 一站式撰写
+      <p>Markdown + LaTeX · 多学科 / 排版 一键撰写
         <span class="pill" title="纯本地：左写右画实时联动，内容不上传"><span class="dot"></span>实时渲染</span>
       </p>
     </div>
@@ -438,7 +438,7 @@ function checkKatexCss(){
 const GREEK="α \\alpha,β \\beta,γ \\gamma,δ \\delta,ε \\varepsilon,ζ \\zeta,η \\eta,θ \\theta,ι \\iota,κ \\kappa,λ \\lambda,μ \\mu,ν \\nu,ξ \\xi,π \\pi,ρ \\rho,σ \\sigma,τ \\tau,φ \\varphi,χ \\chi,ψ \\psi,ω \\omega,Γ \\Gamma,Δ \\Delta,Θ \\Theta,Λ \\Lambda,Ξ \\Xi,Π \\Pi,Σ \\Sigma,Φ \\Phi,Ψ \\Psi,Ω \\Omega".split(",").map(s=>{const p=s.split(" ");return{show:p[0],tex:p[1]};});
 const SYM=[
   {show:"±",tex:"\\pm"},{show:"∓",tex:"\\mp"},{show:"×",tex:"\\times"},{show:"÷",tex:"\\div"},{show:"·",tex:"\\cdot"},
-  {show:"≠",tex:"\\neq"},{show:"≤",tex:"\\leq"},{show:"≥",tex:"\\geq"},{show:"≈",tex:"\\approx"},{show:"≡",tex:"\\equiv"},
+  {show:"≠",tex:"\\neq"},{show:"≤",tex:"\\leq"},{show:"≥",tex:"\\geq"},{show:">",tex:"\\gt"},{show:"<",tex:"\\lt"},{show:"≈",tex:"\\approx"},{show:"≡",tex:"\\equiv"},
   {show:"≅",tex:"\\cong"},{show:"∼",tex:"\\sim"},{show:"∝",tex:"\\propto"},{show:"∞",tex:"\\infty"},
   {show:"∑",tex:"\\sum"},{show:"∏",tex:"\\prod"},{show:"∫",tex:"\\int"},{show:"∬",tex:"\\iint"},{show:"∮",tex:"\\oint"},
   {show:"∂",tex:"\\partial"},{show:"∇",tex:"\\nabla"},{show:"√",tex:"\\sqrt{}"},{show:"∛",tex:"\\sqrt[3]{}"},
@@ -784,6 +784,7 @@ function onChip(text,anchor){
   if(text==="*文本*")return wrapSelection("*","*","文本");
   if(text==="~~文本~~")return wrapSelection("~~","~~","文本");
   if(text==="<u>文本</u>")return wrapSelection("<u>","</u>","文本");
+  if(text==="<mark>文本</mark>")return wrapSelection("<mark>","</mark>","文本");
   if(text==="`code`")return wrapSelection("`","`","code");
   if(text==="## ")return wrapSelection("## ","","标题");
   if(text==="[文字](https://)")return wrapSelection("[","](https://)","文字");
@@ -794,7 +795,7 @@ function onChip(text,anchor){
 function showPinyinPop(anchor){
   const pop=el("div","pop");pop.appendChild(el("div","ptitle","带声调拼音（点击插入字符）"));
   const grid=el("div","grid");
-  const tones=[["ā","á","ǎ","à"],["ē","é","ě","è"],["ī","í","ǐ","ì"],["ō","ó","ǒ","ò"],["ū","ú","ǔ","ù"],["ǖ","ǘ","ǚ","ǜ"]];
+  const tones=[["ā","á","ǎ","à"],["ō","ó","ǒ","ò"],["ē","é","ě","è"],["ī","í","ǐ","ì"],["ū","ú","ǔ","ù"],["ǖ","ǘ","ǚ","ǜ"]];
   tones.forEach(row=>{
     row.forEach(ch=>{
       const b=el("button","sbtn",ch);
@@ -805,14 +806,30 @@ function showPinyinPop(anchor){
 }
 // 音标面板
 function showIpaPop(anchor){
-  const pop=el("div","pop");pop.appendChild(el("div","ptitle","国际音标 IPA（点击插入）"));
-  const grid=el("div","grid");
-  const symbols="iː,ɪ,e,æ,ɑː,ɒ,ɔː,ʊ,uː,ʌ,ɜː,ə,eɪ,aɪ,ɔɪ,əʊ,aʊ,ɪə,eə,ʊə,p,b,t,d,k,g,f,v,θ,ð,s,z,ʃ,ʒ,tʃ,dʒ,h,m,n,ŋ,l,r,w,j".split(",");
-  symbols.forEach(sym=>{
-    const b=el("button","sbtn",esc(sym));b.style.fontFamily="var(--sans)";
-    b.addEventListener("click",ev=>{ev.stopPropagation();insertAtCursor(sym);closePop();});grid.appendChild(b);
+  const pop=el("div","pop");pop.appendChild(el("div","ptitle","48个国际音标（点击插入）"));
+  const container=el("div");container.style.cssText="max-height:400px;overflow-y:auto;padding:4px;";
+  const groups=[
+    {title:"元音 · 单元音（长）",items:["ɑː","ɔː","ɜː","iː","uː"]},
+    {title:"元音 · 单元音（短）",items:["ʌ","ɒ","ə","ɪ","ʊ","e","æ"]},
+    {title:"元音 · 双元音",items:["ɪə","eə","ʊə","əʊ","aʊ","eɪ","aɪ","ɔɪ"]},
+    {title:"辅音 · 爆破音",items:["p","b","t","d","k","g"]},
+    {title:"辅音 · 摩擦音",items:["f","v","θ","ð","s","z","ʃ","ʒ","h","r"]},
+    {title:"辅音 · 破擦音",items:["ts","dz","tʃ","dʒ","tr","dr"]},
+    {title:"辅音 · 鼻音",items:["m","n","ŋ"]},
+    {title:"辅音 · 半元音",items:["j","w"]},
+    {title:"辅音 · 舌侧音",items:["l"]}
+  ];
+  groups.forEach(g=>{
+    const label=el("div");label.style.cssText="font-size:11px;color:#888;margin:8px 0 4px;padding-left:2px;";label.textContent=g.title;
+    container.appendChild(label);
+    const grid=el("div","grid");
+    g.items.forEach(sym=>{
+      const b=el("button","sbtn",esc(sym));b.style.fontFamily="var(--sans)";
+      b.addEventListener("click",ev=>{ev.stopPropagation();insertAtCursor(sym);closePop();});grid.appendChild(b);
+    });
+    container.appendChild(grid);
   });
-  pop.appendChild(grid);placePop(pop,anchor);
+  pop.appendChild(container);placePop(pop,anchor);
 }
 function showSymbolPop(anchor,list,title){
   const pop=el("div","pop");pop.appendChild(el("div","ptitle",title));
@@ -1016,72 +1033,20 @@ src.addEventListener("keydown",e=>{
     insertAtCursor("  ");
     return;
   }
-  // 智能括号补全：检测是否有未匹配的同类符号
+  // 选中文本时输入配对符号自动包裹（保留）
   if(!e.ctrlKey&&!e.metaKey){
-    const pairs={"(":")","[":"]","{":"}"};
-    const selfPairs={"$":"$","*":"*","`":"`"};
+    const pairs={"(":")","[":"]","{":"}","$":"$","*":"*","`":"`"};
     const s=src.selectionStart,end=src.selectionEnd;
     const text=src.value;
     const selected=text.slice(s,end);
-    
-    // 处理有选中文本的情况：任何配对符号都包裹选中文本
-    if(selected&&(pairs[e.key]||selfPairs[e.key])){
+    if(selected&&pairs[e.key]){
       e.preventDefault();
-      const close=pairs[e.key]||selfPairs[e.key];
+      const close=pairs[e.key];
       src.value=text.slice(0,s)+e.key+selected+close+text.slice(end);
       src.selectionStart=s+1;
       src.selectionEnd=s+1+selected.length;
       render();
       return;
-    }
-    
-    // 处理 ( [ { 类：始终补全右括号
-    if(!selected&&pairs[e.key]){
-      e.preventDefault();
-      src.value=text.slice(0,s)+e.key+pairs[e.key]+text.slice(end);
-      src.selectionStart=src.selectionEnd=s+1;
-      render();
-      return;
-    }
-    
-    // 处理 $ * ` 自配对符号：智能判断
-    if(!selected&&selfPairs[e.key]){
-      const ch=e.key;
-      // 如果光标右边紧邻同类字符，直接跳过（不新增）
-      if(text[s]===ch){
-        e.preventDefault();
-        src.selectionStart=src.selectionEnd=s+1;
-        return;
-      }
-      // 统计前面和后面的同类字符数
-      let countBefore=0,countAfter=0;
-      for(let i=0;i<s;i++){if(text[i]===ch)countBefore++;}
-      for(let i=s;i<text.length;i++){if(text[i]===ch)countAfter++;}
-      // 判断逻辑：
-      // - 前面奇数（有孤立的等着闭合）→ 只插入一个，闭合前面的
-      // - 后面奇数（后面有孤立的等着配对）→ 只插入一个，配对后面的
-      // - 前后都是偶数（全部已配对）→ 新开一对，插入两个
-      if(countBefore%2===1||countAfter%2===1){
-        // 有孤立的，只插入一个字符去配对，不多补
-        return; // 放行默认输入行为
-      }else{
-        // 全部已配对，新开一对
-        e.preventDefault();
-        src.value=text.slice(0,s)+ch+ch+text.slice(end);
-        src.selectionStart=src.selectionEnd=s+1;
-        render();
-        return;
-      }
-    }
-    
-    // 处理右括号跳过：如果输入的是 ) ] } 且光标右侧就是对应字符，跳过
-    const closeChars={")":").","]":"].","}":"}."};
-    if(!selected&&(e.key===")"||e.key==="]"||e.key==="}")){
-      if(text[s]===e.key){
-        e.preventDefault();
-        src.selectionStart=src.selectionEnd=s+1;
-        return;
-      }
     }
   }
   // 快捷键
@@ -1319,17 +1284,103 @@ function genVcalc(){
     rt.appendChild(seg);
     const ra=el("div","row");ra.appendChild(el("label",null,"被运算数"));const ia=el("input");ia.type="text";ia.value="123";ra.appendChild(ia);
     const rb=el("div","row");rb.appendChild(el("label",null,"运算数"));const ib=el("input");ib.type="text";ib.value="45";rb.appendChild(ib);
-    ctx.body.append(rt,ra,rb);ctx.body.appendChild(el("div","hint","仅支持非负整数；生成 LaTeX array 格式竖式，逐位对齐。"));
+    // 中文句号自动转英文小数点
+    [ia,ib].forEach(inp=>{inp.addEventListener("input",()=>{if(inp.value.includes("。")){const p=inp.selectionStart;inp.value=inp.value.replace(/。/g,".");inp.selectionStart=inp.selectionEnd=p;}});});
+    // 除法步数滑块
+    const rs=el("div","row");rs.style.display="none";
+    rs.appendChild(el("label",null,"除到第几步"));
+    const slider=el("input");slider.type="range";slider.min="1";slider.max="1";slider.value="1";slider.style.width="200px";
+    const sliderLabel=el("span",null,"");sliderLabel.style.fontSize="12px";sliderLabel.style.color="#666";
+    rs.append(slider,sliderLabel);
+    ctx.body.append(rt,ra,rb,rs);ctx.body.appendChild(el("div","hint","支持小数除法；除法可用滑块控制显示到第几步。"));
     const pv=el("div","preview-box");ctx.body.appendChild(pv);
     function upd(){
-      let latex=buildVcalcLatex(op,ia.value,ib.value);
-      // 预处理：KaTeX 不支持 \enclose{longdiv}，转为近似写法
+      rs.style.display=op==="÷"?"flex":"none";
+      let latex;
+      if(op==="÷"){
+        // 除法：先算全部步数，设置滑块范围
+        buildDivLatexWithStep(ia.value,ib.value,null);
+        const meta=window._divMeta;
+        if(meta&&meta.maxSteps>0){
+          slider.max=meta.maxSteps;
+          if(Number(slider.value)>meta.maxSteps)slider.value=meta.defaultStep;
+          sliderLabel.textContent="第 "+slider.value+" 步 / 共 "+slider.max+" 步";
+        }
+        // 按当前滑块步数生成
+        latex=buildDivLatexWithStep(ia.value,ib.value,Number(slider.value));
+      }else{
+        latex=buildVcalcLatex(op,ia.value,ib.value);
+      }
       latex=latex.replace(/\\enclose\{longdiv\}\{([^}]*)\}/g,'\\overline{\\smash{\\big)}\\,$1}');
       try{pv.innerHTML=katex.renderToString(latex,{displayMode:true,throwOnError:false});}
       catch(e){pv.innerHTML='<span class="math-err">'+esc(e.message)+'</span>';}
     }
-    ia.addEventListener("input",upd);ib.addEventListener("input",upd);upd();ctx._get=()=>({op,a:ia.value,b:ib.value});
-  },ctx=>{const{op,a,b}=ctx._get();const latex=buildVcalcLatex(op,a,b);ctx.insert("\n$$\n"+latex+"\n$$\n");});
+    slider.addEventListener("input",()=>{sliderLabel.textContent="第 "+slider.value+" 步 / 共 "+slider.max+" 步";upd();});
+    ia.addEventListener("input",()=>{slider.value="1";upd();});
+    ib.addEventListener("input",()=>{slider.value="1";upd();});
+    Object.keys(ops).forEach(k=>{btns[k].addEventListener("click",upd);});
+    upd();
+    ctx._get=()=>({op,a:ia.value,b:ib.value,step:Number(slider.value)});
+  },ctx=>{
+    const{op,a,b,step}=ctx._get();
+    let latex;
+    if(op==="÷")latex=buildDivLatexWithStep(a,b,step);
+    else latex=buildVcalcLatex(op,a,b);
+    ctx.insert("\n$\n"+latex+"\n$\n");
+  });
+}
+// 除法竖式（支持步数控制）
+function buildDivLatexWithStep(dividend,divisor,upToStep){
+  dividend=String(dividend).trim();divisor=String(divisor).trim();
+  if(!/^\d+(\.\d+)?$/.test(dividend)||!/^\d+(\.\d+)?$/.test(divisor))return "\\text{（请输入非负数）}";
+  if(Number(divisor.replace(/\./g,""))===0)return "\\text{（除数不能为 0）}";
+  const {divisorInt,B,bdot,shift}=_divNormalize(dividend,divisor);
+  const {quot,steps,renderEnd}=_divSimulate(B,bdot,divisorInt,{});
+  const drawn=steps.filter(s=>s.col<=renderEnd);
+  
+  const di=drawn.findIndex(s=>s.col===B.length-1);
+  const defaultStep=di>=0?di+1:drawn.length;
+  const eff=upToStep==null?defaultStep:Math.max(1,Math.min(upToStep,drawn.length));
+  const vis=drawn.slice(0,eff);
+  
+  // 保存 meta 供滑块使用（挂在 window 上）
+  window._divMeta={maxSteps:drawn.length,defaultStep};
+  
+  const maxQ=vis.length?Math.max(...vis.map(s=>s.col)):-1;
+  const R=Math.max(maxQ,B.length-1);
+  const padR=(s,colRight)=>R>colRight?s+"\\phantom{"+"0".repeat(R-colRight)+"}":s;
+  
+  const showDotQ=maxQ>=bdot;
+  const showDotD=bdot<B.length;
+  let firstShow=B.length;
+  for(let i=0;i<B.length;i++)if(B[i]!=="0"){firstShow=i;break;}
+  firstShow=Math.min(firstShow,bdot-1);
+  
+  let qStr="";
+  for(let c=0;c<=maxQ;c++){
+    let ch=quot[c];if(!ch)continue;
+    if(c===bdot-1&&showDotQ)ch+="_{.}";
+    qStr+=ch;
+  }
+  let S="";
+  for(let c=firstShow;c<B.length;c++){
+    let ch=B[c];
+    if(c===bdot-1&&showDotD)ch+="_{.}";
+    S+=ch;
+  }
+  const dStr=divisorInt+"\\enclose{longdiv}{"+S+"}";
+  
+  const rows=[];
+  if(maxQ>=0)rows.push(padR(qStr,maxQ));
+  rows.push(padR(dStr,B.length-1));
+  let first=true;
+  for(const s of vis){
+    if(s.drew&&!first)rows.push(padR(s.work,s.col));
+    if(s.drew){rows.push(padR("\\underline{"+s.prod+"}",s.col));first=false;}
+  }
+  if(vis.length)rows.push(padR(String(vis[vis.length-1].rem),vis[vis.length-1].col));
+  
+  return "\\begin{array}{r}\n"+rows.join(" \\\\[2pt]\n")+"\n\\end{array}";
 }
 function buildVcalcLatex(op,a,b){
   a=String(a).trim();b=String(b).trim();
@@ -1342,13 +1393,8 @@ function buildVcalcLatex(op,a,b){
     const res=decimalAddSub(a,b,op);
     return buildAlignedCalc([a,b],[opSym],res);
   }
-  // 乘法（只支持整数）
-  if(a.includes(".")||b.includes("."))return "\\text{（乘法暂不支持小数）}";
-  const product=String(BigInt(a)*BigInt(b));
-  const bDigits=b.split("").reverse();
-  const partials=[];
-  bDigits.forEach((d,i)=>{partials.push({val:String(BigInt(a)*BigInt(d)),shift:i});});
-  return buildMulCalc(a,b,partials,product);
+  // 乘法（支持小数）
+  return buildDecimalMulCalc(a,b);
 }
 
 // 精确小数加减法：转整数运算避免浮点误差
@@ -1557,84 +1603,179 @@ function buildDecimalCalc(nums,ops,result){
   
   return "\\begin{array}{"+colSpec+"}\n"+lines.join(" \\\\\n")+"\n\\end{array}";
 }
-// 乘法：逐位对齐
-function buildMulCalc(a,b,partials,product){
-  const maxLen=Math.max(a.length,b.length,product.length,...partials.map(p=>p.val.length+p.shift));
+// 小数乘法竖式
+function buildDecimalMulCalc(a,b){
+  // 解析小数位数
+  const [aInt,aDec]=a.split(".");
+  const [bInt,bDec]=b.split(".");
+  const aDecLen=(aDec||"").length;
+  const bDecLen=(bDec||"").length;
+  const totalDecLen=aDecLen+bDecLen;
+  
+  // 去掉小数点，按整数计算
+  const aClean=aInt+(aDec||"");
+  const bClean=bInt+(bDec||"");
+  
+  // 保持用户输入的顺序，不交换位置
+  const topClean=aClean;
+  const bottomClean=bClean;
+  const topDecLen=aDecLen;
+  const bottomDecLen=bDecLen;
+  
+  // 计算整数乘积
+  const productClean=String(BigInt(topClean)*BigInt(bottomClean));
+  
+  // 生成部分积
+  const bottomDigits=bottomClean.split("").reverse();
+  const partials=[];
+  bottomDigits.forEach((d,i)=>{
+    partials.push({val:String(BigInt(topClean)*BigInt(d)),shift:i});
+  });
+  
+  return buildMulCalcWithDecimal(topClean,bottomClean,partials,productClean,topDecLen,bottomDecLen,totalDecLen);
+}
+
+// 带小数点的乘法竖式生成
+function buildMulCalcWithDecimal(aClean,bClean,partials,productClean,aDecLen,bDecLen,totalDecLen){
+  // 关键：小数点单独占一列，计算列数时加上
+  function colCount(num, decLen){
+    return num.length; // 小数点用下角标不占列
+  }
+  const aCols=colCount(aClean,aDecLen);
+  const bCols=colCount(bClean,bDecLen);
+  const pCols=colCount(productClean,totalDecLen);
+  const partialCols=partials.map(p=>colCount(p.val,0)+p.shift);
+  const maxLen=Math.max(aCols,bCols,pCols,...partialCols);
   const cols=maxLen+1;
-  const colSpec=Array(cols).fill("c").join("");
-  function digitRow(num,prefix,rightShift){
+  const colSpec=Array(cols).fill("r").join("");
+  
+  // 生成带小数点的数字行（小数点单独占一列）
+  function decimalDigitRow(num,prefix,rightShift,decLen){
     rightShift=rightShift||0;
-    const total=num.length+rightShift;
+    const numCols=colCount(num,decLen);
+    const total=numCols+rightShift;
     const leftPad=maxLen-total;
     const cells=[(prefix||" ")];
     for(let i=0;i<leftPad;i++) cells.push(" ");
-    for(let i=0;i<num.length;i++) cells.push(num[i]);
+    
+    if(decLen>0){
+      const intLen=num.length-decLen;
+      for(let i=0;i<num.length;i++){
+        if(i===intLen-1) cells.push(num[i]+"_{.}"); // 小数点作为右下角标
+        else cells.push(num[i]);
+      }
+    }else{
+      for(let i=0;i<num.length;i++) cells.push(num[i]);
+    }
+    
     for(let i=0;i<rightShift;i++) cells.push(" ");
     return cells.join(" & ");
   }
+  
   const lines=[];
-  lines.push(digitRow(a," ",0));
-  lines.push(digitRow(b,"\\times",0));
+  lines.push(decimalDigitRow(aClean," ",0,aDecLen));
+  lines.push(decimalDigitRow(bClean,"\\times",0,bDecLen));
   lines.push("\\hline");
+  
   if(partials.length===1||(partials.filter(p=>p.val!=="0").length<=1)){
     const p=partials.find(x=>x.val!=="0")||partials[0];
-    lines.push(digitRow(p.val," ",p.shift));
+    lines.push(decimalDigitRow(p.val," ",p.shift,0));
   }else{
-    partials.forEach(p=>{lines.push(digitRow(p.val," ",p.shift));});
+    partials.forEach(p=>{lines.push(decimalDigitRow(p.val," ",p.shift,0));});
     lines.push("\\hline");
   }
-  lines.push(digitRow(product," ",0));
+  lines.push(decimalDigitRow(productClean," ",0,totalDecLen));
+  
   return "\\begin{array}{"+colSpec+"}\n"+lines.join(" \\\\\n")+"\n\\end{array}";
 }
 // 除法
-// 除法竖式：模拟手算（千问 max 方案，phantom 对齐 + drawable 过滤）
-function simulateDiv(dividend,divisor){
-  const digits=String(dividend).split("").map(Number);
-  const n=digits.length,qDigits=[],steps=[];
-  let cur=0,started=false;
-  for(let i=0;i<n;i++){
-    cur=cur*10+digits[i];
-    const q=Math.floor(cur/divisor);
-    if(!started&&q===0&&i<n-1)continue; // 跳过商的前导零
-    started=true;
-    qDigits.push(q);
-    steps.push({end:i,q:q,product:q*divisor,partial:cur});
-    cur-=q*divisor;
-  }
-  return {digits,qDigits,steps,rem:cur};
+// 除法竖式（整数+小数统一处理，千问 max 方案）
+// 支持：整数÷整数、小数÷小数、添0继续除、商带小数点
+const _divDec=s=>s.includes(".")?s.length-s.indexOf(".")-1:0;
+const _divStrip=s=>s.replace(/\./g,"");
+
+function _divNormalize(dividend,divisor){
+  const shift=_divDec(divisor);
+  const divisorInt=parseInt(_divStrip(divisor),10);
+  const orig=_divStrip(dividend);
+  const dd=_divDec(dividend);
+  const B=orig+"0".repeat(Math.max(0,shift-dd));
+  const bdot=B.length-Math.max(0,dd-shift);
+  return {divisorInt,B,bdot,shift};
 }
-function buildDivLatex(dividend,divisor){
-  if(dividend.includes(".")||divisor.includes("."))return "\\text{（除法暂不支持小数）}";
-  const dNum=Number(dividend),bNum=Number(divisor);
-  if(bNum===0)return "\\text{（除数不能为 0）}";
-  if(dNum<bNum)return "\\text{（被除数应 ≥ 除数）}";
-  const {digits,qDigits,steps,rem}=simulateDiv(dNum,bNum);
-  // drawable：商中间为0的步骤按教材惯例不写减法行（如 906÷3）
-  const drawable=steps.map((s,k)=>s.q>0||k===steps.length-1);
-  // 行尾补 phantom，使该行右端对齐到被除数第 i 位
-  const pad=i=>{const r=digits.slice(i+1).join("");return r?"\\phantom{"+r+"}":"";};
-  const body=[];
-  let prevEnd=-1,prevRem=null;
-  for(let k=0;k<steps.length;k++){
-    const s=steps[k];
-    if(!drawable[k]){prevEnd=s.end;prevRem=s.partial;continue;}
-    // "落下来"一行 = 上步余数拼落下的数字
-    if(prevRem!==null){
-      body.push(prevRem+""+digits.slice(prevEnd+1,s.end+1).join("")+pad(s.end));
-    }
-    body.push("\\underline{"+s.product+"}"+pad(s.end));
-    prevEnd=s.end;
-    prevRem=s.partial-s.product;
+
+function _divSimulate(B,bdot,D,o){
+  const prec=o.precision||8;
+  const stream=B+"0".repeat(prec);
+  const quot=new Array(stream.length).fill("");
+  const steps=[];
+  let rem=0,started=false,renderEnd=-1;
+  for(let col=0;col<stream.length;col++){
+    const cur=rem*10+(stream.charCodeAt(col)-48);
+    const isUnit=col===bdot-1;
+    if(!(started||cur>=D||isUnit)){rem=cur;continue;}
+    started=true;
+    const q=Math.floor(cur/D);
+    quot[col]=String(q);
+    const drew=q>0,prod=q*D;
+    rem=cur-prod;
+    steps.push({col,q,work:String(cur),prod:String(prod),rem,drew});
+    if(rem===0&&col>=bdot-1){renderEnd=col;break;}
   }
-  // 最终余数
-  body.push(String(rem));
-  const rows=[
-    qDigits.join(""),
-    divisor+"\\enclose{longdiv}{"+digits.join("")+"}",
-    ...body
-  ];
+  if(renderEnd<0)renderEnd=steps.length?steps[steps.length-1].col:-1;
+  return {quot,steps,renderEnd};
+}
+
+function buildDivLatex(dividend,divisor){
+  if(Number(divisor.replace(/\./g,""))===0)return "\\text{（除数不能为 0）}";
+  const {divisorInt,B,bdot,shift}=_divNormalize(dividend,divisor);
+  const {quot,steps,renderEnd}=_divSimulate(B,bdot,divisorInt,{});
+  const drawn=steps.filter(s=>s.col<=renderEnd);
+  
+  // 默认步 = 被除数末位落完那一步
+  const di=drawn.findIndex(s=>s.col===B.length-1);
+  const defaultStep=di>=0?di+1:drawn.length;
+  const vis=drawn.slice(0,defaultStep);
+  
+  const maxQ=vis.length?Math.max(...vis.map(s=>s.col)):-1;
+  const R=Math.max(maxQ,B.length-1);
+  const padR=(s,colRight)=>R>colRight?s+"\\phantom{"+"0".repeat(R-colRight)+"}":s;
+  
+  const showDotQ=maxQ>=bdot;
+  const showDotD=bdot<B.length;
+  let firstShow=B.length;
+  for(let i=0;i<B.length;i++)if(B[i]!=="0"){firstShow=i;break;}
+  firstShow=Math.min(firstShow,bdot-1);
+  
+  // 商行
+  let qStr="";
+  for(let c=0;c<=maxQ;c++){
+    let ch=quot[c];if(!ch)continue;
+    if(c===bdot-1&&showDotQ)ch+="_{.}";
+    qStr+=ch;
+  }
+  // 被除数行
+  let S="";
+  for(let c=firstShow;c<B.length;c++){
+    let ch=B[c];
+    if(c===bdot-1&&showDotD)ch+="_{.}";
+    S+=ch;
+  }
+  const dStr=divisorInt+"\\enclose{longdiv}{"+S+"}";
+  
+  const rows=[];
+  if(maxQ>=0)rows.push(padR(qStr,maxQ));
+  rows.push(padR(dStr,B.length-1));
+  let first=true;
+  for(const s of vis){
+    if(s.drew&&!first)rows.push(padR(s.work,s.col));
+    if(s.drew){rows.push(padR("\\underline{"+s.prod+"}",s.col));first=false;}
+  }
+  if(vis.length)rows.push(padR(String(vis[vis.length-1].rem),vis[vis.length-1].col));
+  
   return "\\begin{array}{r}\n"+rows.join(" \\\\[2pt]\n")+"\n\\end{array}";
 }
+
 function buildVcalc(op,a,b){return buildVcalcLatex(op,a,b);}
 function vadd(a,b,res,op){const W=Math.max(a.length,b.length,res.length);return [" "+padL(a,W),op+padL(b,W),"-".repeat(W+1)," "+padL(res,W)].join("\n");}
 function vmul(a,b){
@@ -1669,10 +1810,13 @@ $("#btn-cheat").addEventListener("click",()=>{
   modal("语法速查手册",ctx=>{
     const d=el("div","cheat");
     const sec=(h,items)=>{const c=el("div");c.appendChild(el("h4",null,h));items.forEach(([t,code])=>c.appendChild(el("div","item",esc(t)+"　<code>"+esc(code)+"</code>")));d.appendChild(c);};
-    sec("数学公式",[["行内公式","$ x^2 $"],["块级公式","$$ ... $$"],["分数","\\frac{a}{b}"],["根号 / n次根","\\sqrt{x}  \\sqrt[n]{x}"],["上下标","x_{i}  x^{2}"],["求和 / 积分","\\sum  \\int"],["方程组","\\begin{cases}..\\end{cases}"],["矩阵","\\begin{pmatrix}..\\end{pmatrix}"]]);
+    sec("数学公式",[["行内公式","$x^2$"],["块级公式","$ ... $"],["分数","\\frac{a}{b}"],["根号 / n次根","\\sqrt{x}  \\sqrt[n]{x}"],["上下标","x_{i}  x^{2}"],["求和 / 积分","\\sum  \\int"],["大于 / 小于","\\gt  \\lt"],["大于等于 / 小于等于","\\geq  \\leq"],["不等于","\\neq"],["方程组","\\begin{cases}..\\end{cases}"],["矩阵","\\begin{pmatrix}..\\end{pmatrix}"]]);
+    sec("竖式生成器",[["加减乘除","工具栏「▥ 竖式」按钮"],["支持小数","加减乘除均支持小数"],["除法步数","除法可用滑块控制显示到第几步"],["小数点","小数点显示为右下角标 _{.}"]]);
     sec("化学 (mhchem)",[["化学式","\\ce{H2O}"],["方程式","\\ce{2H2 + O2 -> 2H2O}"],["条件箭头","\\ce{->[$\\Delta$]}  \\ce{->[点燃]}"],["可逆","\\ce{A <=> B}"],["沉淀 / 气体","\\ce{CaCO3 v}  \\ce{O2 ^}"]]);
-    sec("语文 / 排版",[["拼音","<ruby>字<rt>zì</rt></ruby>"],["田字格",'<span class="tzg">字</span>'],["四线三格",'<span class="sxg">Aa</span>'],["竖式",'<pre class="vcalc">..</pre>'],["表格","| a | b |"],["加粗 / 斜体","**粗**  *斜*"]]);
-    sec("本机说明",[["占位符","工具栏插入的 □ 会自动选中，直接覆盖"],["本机暂存","每 0.6 秒写入本浏览器，仅本机、不上传、换设备为空"],["复制源码","顶栏「复制源码」即标准范式文本"]]);
+    sec("语文 / 排版",[["拼音注音","<ruby>字<rt>zì</rt></ruby>"],["声调面板","工具栏「ā 声调」按 a o e i u ǖ 排列"],["田字格","工具栏「田 田字格」含描红模式"],["四线三格",'工具栏「Aa 四线」英文练习'],["高亮标记","<mark>文本</mark>"]]);
+    sec("英语工具",[["音标面板","48个国际音标，按元音/辅音分组"],["重音符号","ˈ 主重音  ˌ 次重音"]]);
+    sec("格式 / Markdown",[["加粗","**文本**"],["斜体","*文本*"],["删除线","~~文本~~"],["下划线","<u>文本</u>"],["行内代码","`code`"],["表格","| a | b |"],["链接","[文字](url)"],["图片","![描述](url)"]]);
+    sec("本机说明",[["本机暂存","自动写入本浏览器，仅本机、不上传"],["复制源码","顶栏「复制源码」即标准范式文本"],["文件导入","拖入 .md / .txt 文件"],["搜索替换","Ctrl+F 打开搜索替换面板"]]);
     ctx.body.appendChild(d);
   },ctx=>ctx.close(),"知道了");
 });
@@ -1736,7 +1880,7 @@ $$
 \\end{array}
 $$
 
-> 每位数字独立一列，个十百千位严格对齐。用工具栏「▥ 竖式」一键生成。
+
 `;
 function afterBoot(){
   buildToolbar();
@@ -1765,9 +1909,9 @@ function initShortcutsPanel(){
     const body=el("div","body");
     
     const shortcuts=[
-      {cat:"文本格式",items:[["Ctrl+B","加粗"],["Ctrl+I","斜体"],["Ctrl+U","下划线"],["Ctrl+S","删除线"],["Ctrl+K","插入链接"],["Ctrl+`","行内代码"]]},
-      {cat:"编辑操作",items:[["Ctrl+Z","撤销"],["Ctrl+Y","重做"],["Ctrl+F","搜索替换"],["Tab","缩进"]]},
-      {cat:"自动补全",items:[["( [ {","自动补全右括号"],["$ * `","自动补全配对符号"],["选中文本后输入","自动包裹"]]}
+      {cat:"文本格式",items:[["Ctrl+B","加粗 **文本**"],["Ctrl+I","斜体 *文本*"],["Ctrl+U","下划线 <u>"],["Ctrl+S","删除线 ~~文本~~"],["Ctrl+K","插入链接"],["Ctrl+`","行内代码"]]},
+      {cat:"编辑操作",items:[["Ctrl+Z","撤销"],["Ctrl+Y","重做"],["Ctrl+F","搜索替换"],["Tab","缩进（2空格）"]]},
+      {cat:"智能包裹",items:[["选中文本 + ( [ { $ * `","自动用配对符号包裹选中文本"],["选中文本 + 点工具栏按钮","加粗/斜体/高亮等自动包裹"]]}
     ];
     
     shortcuts.forEach(group=>{
@@ -1929,5 +2073,6 @@ function updateDarkBtn(){
   }
 }
 </script>
+<div style="text-align:center;padding:16px 0 12px;font-size:12px;color:#aab4c0;">© 2026 Anan Tools</div>
 </body>
 </html>
