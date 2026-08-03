@@ -1639,6 +1639,8 @@ function buildDecimalMulCalc(a,b){
 function buildMulCalcWithDecimal(aClean,bClean,partials,productClean,aDecLen,bDecLen,totalDecLen){
   // 关键：小数点单独占一列，计算列数时加上
   function colCount(num, decLen){
+    const intLen=num.length-decLen;
+    if(intLen<=0) return num.length+1; // 前导0占一列
     return num.length; // 小数点用下角标不占列
   }
   const aCols=colCount(aClean,aDecLen);
@@ -1660,9 +1662,15 @@ function buildMulCalcWithDecimal(aClean,bClean,partials,productClean,aDecLen,bDe
     
     if(decLen>0){
       const intLen=num.length-decLen;
-      for(let i=0;i<num.length;i++){
-        if(i===intLen-1) cells.push(num[i]+"_{.}"); // 小数点作为右下角标
-        else cells.push(num[i]);
+      if(intLen<=0){
+        // 整数部分为0（如 0.336）：补前导零 + 小数点
+        cells.push("0_{.}");
+        for(let i=0;i<num.length;i++) cells.push(num[i]);
+      }else{
+        for(let i=0;i<num.length;i++){
+          if(i===intLen-1) cells.push(num[i]+"_{.}"); // 小数点作为右下角标
+          else cells.push(num[i]);
+        }
       }
     }else{
       for(let i=0;i<num.length;i++) cells.push(num[i]);
@@ -1678,13 +1686,13 @@ function buildMulCalcWithDecimal(aClean,bClean,partials,productClean,aDecLen,bDe
   lines.push("\\hline");
   
   if(partials.length===1||(partials.filter(p=>p.val!=="0").length<=1)){
-    const p=partials.find(x=>x.val!=="0")||partials[0];
-    lines.push(decimalDigitRow(p.val," ",p.shift,0));
+    // 只有一个有效部分积：直接写最终结果（不写部分积行）
+    lines.push(decimalDigitRow(productClean," ",0,totalDecLen));
   }else{
     partials.forEach(p=>{lines.push(decimalDigitRow(p.val," ",p.shift,0));});
     lines.push("\\hline");
+    lines.push(decimalDigitRow(productClean," ",0,totalDecLen));
   }
-  lines.push(decimalDigitRow(productClean," ",0,totalDecLen));
   
   return "\\begin{array}{"+colSpec+"}\n"+lines.join(" \\\\\n")+"\n\\end{array}";
 }
@@ -1720,7 +1728,7 @@ function _divSimulate(B,bdot,D,o){
     const drew=q>0,prod=q*D;
     rem=cur-prod;
     steps.push({col,q,work:String(cur),prod:String(prod),rem,drew});
-    if(rem===0&&col>=bdot-1){renderEnd=col;break;}
+    if(rem===0&&col>=B.length-1){renderEnd=col;break;}
   }
   if(renderEnd<0)renderEnd=steps.length?steps[steps.length-1].col:-1;
   return {quot,steps,renderEnd};
